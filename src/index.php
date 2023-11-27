@@ -1,11 +1,10 @@
 <?php
 // index.php
-$logstashHost = 'localhost';
-$logstashPort = '5000';
 
+$logstashHost = 'logstash'; // Nome do serviço Logstash no docker-compose
+$logstashPort = '5000';     // Porta configurada para o input HTTP do Logstash
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Mudar o endpoint para o Logstash
     $client = curl_init("http://$logstashHost:$logstashPort/");
 
     $data = json_encode(['message' => $_POST['message']]);
