@@ -1,11 +1,13 @@
 <?php
 // index.php
+$logstashHost = 'localhost';
+$logstashPort = '5000';
 
-$esHost = 'elasticsearch'; // Nome do serviço Elasticsearch no docker-compose
-$esPort = '9200';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $client = curl_init("http://$esHost:$esPort/my_index/_doc/");
+    // Mudar o endpoint para o Logstash
+    $client = curl_init("http://$logstashHost:$logstashPort/");
+
     $data = json_encode(['message' => $_POST['message']]);
 
     curl_setopt($client, CURLOPT_CUSTOMREQUEST, "POST");
@@ -19,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $response = curl_exec($client);
     curl_close($client);
 
-    echo "Data sent to Elasticsearch: $response";
+    echo "Data sent to Logstash: $response";
 }
 ?>
 
