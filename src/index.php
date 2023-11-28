@@ -49,8 +49,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo 'Curl error: ' . curl_error($ch);
         }
         curl_close($ch);
-        echo "Resposta do Elasticsearch: " . $response;
+        $responseArray = json_decode($response, true);
+        echo "<pre>Resposta do Elasticsearch: " . json_encode($responseArray, JSON_PRETTY_PRINT) . "</pre>";
+    } elseif($action === 'delete') {
+        // Deletar documento no Elasticsearch
+        $documentId = $_POST['documentId'];
+        $deleteUrl = "http://$esHost:$esPort/$index/_doc/$documentId";
+
+        // Inicializar cURL
+        $ch = curl_init($deleteUrl);
+
+        // Configurar opções do cURL
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        // Executar a requisição
+        $response = curl_exec($ch);
+
+        // Verificar se ocorreu algum erro
+        if (curl_errno($ch)) {
+            echo 'Curl error: ' . curl_error($ch);
+        } else {
+            $responseArray = json_decode($response, true);
+            echo "<pre>Documento deletado: " . json_encode($responseArray, JSON_PRETTY_PRINT) . "</pre>";
+        }
+
+        // Fechar a conexão cURL
+        curl_close($ch);
     }
+
+
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($_GET['documentId'])) {
@@ -96,3 +124,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($_GET['documentId'])) {
     <button type="submit">Buscar Documento</button>
 </form>
 
+<form method="post">
+    <input type="hidden" name="action" value="delete">
+    <input type="text" name="documentId" placeholder="ID do Documento para Deletar">
+    <button type="submit">Deletar Documento</button>
+</form>
