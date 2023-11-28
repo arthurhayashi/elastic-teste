@@ -81,26 +81,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($_GET['documentId'])) {
-    $searchUrl = "http://$esHost:$esPort/$index/_doc/" . $_GET['documentId'];
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($_GET['message'])) {
+    // Preparar a URL de busca
+    $searchUrl = "http://$esHost:$esPort/$index/_search";
 
+    // Preparar o corpo da requisição de busca
+    $searchBody = json_encode([
+        'query' => [
+            'match' => [
+                'message' => $_GET['message']
+            ]
+        ]
+    ]);
+
+    // Inicializar cURL
     $client = curl_init($searchUrl);
     curl_setopt($client, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($client, CURLOPT_POSTFIELDS, $searchBody);
+    curl_setopt($client, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
 
+    // Executar a requisição
     $response = curl_exec($client);
+
     if ($response === false) {
         echo "cURL Error: " . curl_error($client);
     } else {
         $responseArray = json_decode($response, true);
 
-        if (isset($responseArray['found']) && $responseArray['found']) {
-            // Usando json_encode com JSON_PRETTY_PRINT
-            echo "<pre>Documento encontrado: " . json_encode($responseArray['_source'], JSON_PRETTY_PRINT) . "</pre>";
+        // Verificar se houve resultados
+        if (isset($responseArray['hits']['hits']) && count($responseArray['hits']['hits']) > 0) {
+            echo "<pre>Resultados encontrados: " . json_encode($responseArray['hits']['hits'], JSON_PRETTY_PRINT) . "</pre>";
         } else {
-            echo "Documento não encontrado.";
+            echo "Nenhum documento encontrado.";
         }
     }
 
+    // Fechar a conexão cURL
     curl_close($client);
 }
 
@@ -120,8 +136,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($_GET['documentId'])) {
 </form>
 
 <form method="get">
-    <input type="text" name="documentId" placeholder="ID do Documento">
-    <button type="submit">Buscar Documento</button>
+    <input type="text" name="message" placeholder="Mensagem para buscar">
+    <button type="submit">Buscar por Mensagem</button>
 </form>
 
 <form method="post">
